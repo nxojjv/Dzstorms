@@ -1,37 +1,60 @@
 <?php
-// Importa o ficheiro de proteção da área de administrador
-// Este ficheiro garante que só utilizadores com permissão de admin podem aceder
-require_once __DIR__ . '/../includes/admin.php';
+/*
+  Protege a página para apenas administradores.
+  O ficheiro admin.php verifica se o utilizador está logado
+  e se tem permissão de administrador.
+*/
+require_once __DIR__ . '/admin.php';
 
-// Importa o cabeçalho da página
-// Normalmente contém o início do HTML, menu/navbar e estilos principais
-require_once __DIR__ . '/../includes/header.php';
+/*
+  Importa o cabeçalho da página.
+  Contém o início do HTML, menu/navbar e estilos principais.
+*/
+require_once __DIR__ . '/header.php';
 ?>
 
-<!-- Título principal do painel de administração -->
-<h3 class="fw-bold">Admin - Painel</h3>
+<div class="container py-5">
 
-<!-- Pequena descrição do que pode ser feito nesta área -->
-<p class="text-light opacity-75">
-  Gestão do DZStorm (jogos e vendas).
-</p>
+  <div class="card card-dark shadow mx-auto" style="max-width: 700px;">
+    <div class="card-body p-4">
 
-<!-- Área com os botões principais do painel -->
-<div class="d-flex gap-2 mt-3">
+      <!-- Título principal do painel de administração -->
+      <h3 class="fw-bold mb-2">painel do administrador</h3>
 
-  <!-- Botão que leva para a página onde o administrador pode gerir os jogos -->
-  <a class="btn btn-warning" href="/dzstorms/admin/games.php">
-    Gerir Jogos
-  </a>
+      <!-- Pequena descrição do painel -->
+      <p class="text-light opacity-75 mb-4">
+        Gestão do DZStorms: jogos e vendas.
+      </p>
 
-  <!-- Botão que leva para a página onde o administrador pode ver as vendas/pedidos -->
-  <a class="btn btn-outline-light" href="/dzstorms/admin/orders.php">
-    Ver Vendas
-  </a>
+      <!-- Botões principais do painel -->
+      <div class="d-grid gap-3">
+
+        <!-- Página onde o administrador gere os jogos -->
+        <a class="btn btn-warning" href="games.php">
+          gerir jogos
+        </a>
+
+        <!-- Página onde o administrador consulta os pedidos/vendas -->
+        <a class="btn btn-outline-light" href="pedidos.php">
+          ver pedidos / vendas
+        </a>
+
+        <!-- Voltar para a página inicial do site -->
+        <a class="btn btn-outline-secondary" href="index.php">
+          voltar ao site
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <?php
-// Importa o rodapé da página
-// Normalmente contém o fim do HTML e scripts finais
-require_once __DIR__ . '/../includes/footer.php';
+/*
+  Importa o rodapé da página.
+  Contém o fim do HTML e scripts finais.
+*/
+require_once __DIR__ . '/footer.php';
 ?>

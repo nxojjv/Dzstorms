@@ -1,89 +1,142 @@
 <?php
+/* 
+  Este ficheiro mostra, na área de administrador,
+  todos os pedidos/compras feitos pelos utilizadores.
+*/
+
+/* protege a página, permitindo acesso apenas ao administrador */
+require_once __DIR__ . '/admin.php';
+
+/* importa a ligação com a base de dados */
 require_once __DIR__ . '/db.php';
+
+/* importa funções auxiliares, como e() */
 require_once __DIR__ . '/functions.php';
 
-$token = $_GET['token'] ?? '';
+/* carrega o cabeçalho do site */
+require_once __DIR__ . '/header.php';
 
-if ($token === '') {
-  flash_set('danger', 'token inválido.');
-  redirect('entrar.php');
-}
-
+/* cria a ligação com a base de dados */
 $pdo = db();
 
-$st = $pdo->prepare("SELECT id FROM users WHERE reset_token = ?");
-$st->execute([$token]);
-$user = $st->fetch();
+/*
+  Consulta os pedidos realizados.
 
-if (!$user) {
-  flash_set('danger', 'token inválido ou já utilizado.');
-  redirect('entrar.php');
-}
+  A tabela pedidos guarda os dados da compra.
+  A tabela users guarda os dados do utilizador.
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $senha = $_POST['senha'] ?? '';
-  $confirmar = $_POST['confirmar_senha'] ?? '';
+  O INNER JOIN junta as duas tabelas para mostrar:
+  - id do pedido
+  - total da compra
+  - estado do pedido
+  - data da compra
+  - nome do utilizador
+  - email do utilizador
+*/
+$st = $pdo->query("
+  SELECT p.id, p.total, p.status, p.created_at, u.name, u.email
+  FROM pedidos p
+  INNER JOIN users u ON u.id = p.user_id
+  ORDER BY p.created_at DESC
+");
 
-  if ($senha === '' || $confirmar === '') {
-    flash_set('danger', 'preenche todos os campos.');
-    redirect('redefinir_senha.php?token=' . urlencode($token));
-  }
-
-  if ($senha !== $confirmar) {
-    flash_set('danger', 'as senhas não coincidem.');
-    redirect('redefinir_senha.php?token=' . urlencode($token));
-  }
-
-  $hash = password_hash($senha, PASSWORD_DEFAULT);
-
-  $st = $pdo->prepare("
-    UPDATE users
-    SET password_hash = ?, reset_token = NULL
-    WHERE id = ?
-  ");
-  $st->execute([$hash, $user['id']]);
-
-  flash_set('success', 'senha alterada com sucesso.');
-  redirect('entrar.php');
-}
-
-require_once __DIR__ . '/header.php';
+/* guarda todos os pedidos encontrados num array */
+$pedidos = $st->fetchAll();
 ?>
 
-<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
-  <div class="card card-dark shadow" style="max-width: 430px; width:100%;">
-    <div class="card-body p-4">
-      <h3 class="fw-bold mb-3 text-center">nova senha</h3>
-
-      <form method="post">
-        <div class="mb-3">
-          <label class="form-label">nova senha</label>
-          <input type="password" name="senha" id="senha" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">confirmar senha</label>
-          <input type="password" name="confirmar_senha" id="confirmar_senha" class="form-control" required>
-        </div>
-
-        <button class="btn btn-outline-light w-100 mb-3" type="button" onclick="mostrarSenhas()">
-          ver senha
-        </button>
-
-        <button class="btn btn-success w-100">alterar senha</button>
-      </form>
-    </div>
+<!-- cabeçalho da página de pedidos -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">pedidos</h2>
+    <p class="text-light-emphasis mb-0">
+      lista de compras feitas no sistema
+    </p>
   </div>
 </div>
 
-<script>
-function mostrarSenhas() {
-  const senha = document.getElementById('senha');
-  const confirmar = document.getElementById('confirmar_senha');
+<!-- card principal onde a tabela é apresentada -->
+<div class="card border-0 shadow text-light" style="background: rgba(20,20,28,0.92);">
+  <div class="card-body">
 
-  senha.type = senha.type === 'password' ? 'text' : 'password';
-  confirmar.type = confirmar.type === 'password' ? 'text' : 'password';
-}
-</script>
+    <?php if (!$pedidos): ?>
 
-<?php require_once __DIR__ . '/footer.php'; ?>
+      <!-- mensagem mostrada quando não existem pedidos -->
+      <div class="alert alert-warning mb-0">
+        nenhum pedido encontrado.
+      </div>
+
+    <?php else: ?>
+
+      <!-- deixa a tabela responsiva em telas menores -->
+      <div class="table-responsive">
+
+        <!-- tabela com os pedidos -->
+        <table class="table table-dark table-hover align-middle">
+
+          <!-- cabeçalho da tabela -->
+          <thead>
+            <tr>
+              <th>pedido</th>
+              <th>utilizador</th>
+              <th>email</th>
+              <th>total</th>
+              <th>estado</th>
+              <th>data</th>
+            </tr>
+          </thead>
+
+          <!-- corpo da tabela -->
+          <tbody>
+
+            <!-- percorre todos os pedidos encontrados -->
+            <?php foreach ($pedidos as $pedido): ?>
+              <tr>
+
+                <!-- mostra o número/id do pedido -->
+                <td>
+                  #<?= (int)$pedido['id'] ?>
+                </td>
+
+                <!-- mostra o nome do utilizador -->
+                <td>
+                  <?= e($pedido['name']) ?>
+                </td>
+
+                <!-- mostra o email do utilizador -->
+                <td>
+                  <?= e($pedido['email']) ?>
+                </td>
+
+                <!-- mostra o valor total da compra formatado em euros -->
+                <td class="text-success fw-bold">
+                  €<?= number_format((float)$pedido['total'], 2, ',', '.') ?>
+                </td>
+
+                <!-- mostra o estado do pedido -->
+                <td>
+                  <span class="badge bg-success">
+                    <?= e($pedido['status']) ?>
+                  </span>
+                </td>
+
+                <!-- mostra a data da compra formatada -->
+                <td>
+                  <?= date('d/m/Y H:i', strtotime($pedido['created_at'])) ?>
+                </td>
+
+              </tr>
+            <?php endforeach; ?>
+
+          </tbody>
+        </table>
+      </div>
+
+    <?php endif; ?>
+
+  </div>
+</div>
+
+<?php 
+/* carrega o rodapé do site */
+require_once __DIR__ . '/footer.php'; 
+?>

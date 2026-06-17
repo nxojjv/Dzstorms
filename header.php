@@ -119,6 +119,26 @@ $flash = flash_get();
       letter-spacing: 0;
       color: rgba(255,255,255,0.75);
     }
+   .page-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #ffffff;
+}
+
+.green-letter {
+  color: #25c45a;
+}
+
+.page-subtitle {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.65);
+}
   </style>
 </head>
 

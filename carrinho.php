@@ -164,9 +164,9 @@ if (!empty($idsCarrinho)) {
           <div class="d-grid gap-2">
 
             <!-- Leva o utilizador para finalizar a compra -->
-            <a href="finalizar_compra.php" class="btn btn-success">
-              finalizar compra
-            </a>
+           <a href="pagamento.php" class="btn btn-success">
+  avançar para pagamento
+</a>
 
             <!-- Leva o utilizador de volta para a loja -->
             <a href="loja.php" class="btn btn-outline-light">

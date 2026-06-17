@@ -1,5 +1,10 @@
 <?php
 
+/* endereço base do projeto */
+if (!defined('BASE_URL')) {
+  define('BASE_URL', 'http://localhost/dzstorms');
+}
+
 /* evita problemas ao mostrar textos na página */
 function e(string $value): string {
   return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
@@ -47,7 +52,9 @@ function cart_add(int $gameId): void {
 
 /* remove um jogo do carrinho */
 function cart_remove(int $gameId): void {
-  if (isset($_SESSION['cart'][$gameId])) unset($_SESSION['cart'][$gameId]);
+  if (isset($_SESSION['cart'][$gameId])) {
+    unset($_SESSION['cart'][$gameId]);
+  }
 }
 
 /* mostra os jogos que estão no carrinho */

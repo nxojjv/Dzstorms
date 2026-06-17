@@ -40,21 +40,21 @@ if (!$jogo) {
 /* verifica qual jogo deve abrir */
 $gameFile = $jogo['game_file'] ?? '';
 
-/* abre o jogo de clique */
-if ($gameFile === 'click') {
-  require __DIR__ . '/jogo_click.php';
+/* abre o jogo da cobra */
+if ($gameFile === 'snake') {
+  require __DIR__ . '/jogo_snake.php';
   exit;
 }
 
-/* abre o jogo de quiz */
-if ($gameFile === 'quiz') {
-  require __DIR__ . '/jogo_quiz.php';
+/* abre o jogo do pac-man */
+if ($gameFile === 'pacman') {
+  require __DIR__ . '/jogo_pac_man.php';
   exit;
 }
 
-/* abre o jogo da memória */
-if ($gameFile === 'memory') {
-  require __DIR__ . '/jogo_memory.php';
+/* abre o jogo block breaker */
+if ($gameFile === 'block_breaker') {
+  require __DIR__ . '/jogo_block_breaker.php';
   exit;
 }
 

@@ -56,7 +56,10 @@ require_once __DIR__ . '/header.php';
     <div class="card-body p-4">
 
       <!-- título da página -->
-      <h3 class="fw-bold mb-3 text-center">login</h3>
+      <h3 class="fw-bold mb-3 text-center">
+        <i class="bi bi-person-circle me-2 text-success"></i>
+        login
+      </h3>
 
       <!-- formulário de login -->
       <form method="post">
@@ -82,13 +85,19 @@ require_once __DIR__ . '/header.php';
         </div>
 
         <!-- botão de entrada -->
-        <button class="btn btn-success w-100">entrar</button>
+        <button class="btn btn-success w-100 fw-bold">
+          <i class="bi bi-person-check-fill me-2"></i>
+          entrar
+        </button>
       </form>
 
       <!-- link para recuperação de senha -->
       <div class="text-center mt-3">
         <small>
-          <a href="recuperar_senha.php" class="text-success">esqueci minha senha</a>
+          <a href="recuperar_senha.php" class="text-success">
+            <i class="bi bi-key me-1"></i>
+            esqueci minha senha
+          </a>
         </small>
       </div>
 
@@ -96,7 +105,10 @@ require_once __DIR__ . '/header.php';
       <div class="text-center mt-2">
         <small>
           ainda não tem conta?
-          <a href="registrar.php" class="text-success">registar</a>
+          <a href="registrar.php" class="text-success">
+            <i class="bi bi-person-plus me-1"></i>
+            registar
+          </a>
         </small>
       </div>
 

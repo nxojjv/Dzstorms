@@ -1,186 +1,307 @@
 <?php
-// Importa o ficheiro responsável pela ligação à base de dados
 require_once __DIR__ . '/db.php';
-
-// Importa o ficheiro com funções auxiliares do projeto
-// Por exemplo: cart_items(), e(), redirect(), flash_set(), etc.
 require_once __DIR__ . '/functions.php';
 
-// Importa o cabeçalho da página
-// Normalmente contém o início do HTML, menu/navbar e estilos principais
-require_once __DIR__ . '/header.php';
-
-// Vai buscar os IDs dos jogos que estão guardados no carrinho
-// cart_items() devolve os itens do carrinho e array_keys() pega apenas nos IDs
-$idsCarrinho = array_keys(cart_items());
-
-// Cria um array vazio para guardar os jogos encontrados na base de dados
+/* carrega os jogos que estão no carrinho */
+$cart = cart_items();
+$ids = array_keys($cart);
 $jogos = [];
-
-// Cria a variável total, que vai guardar o valor total do carrinho
 $total = 0;
 
-// Verifica se o carrinho tem algum jogo
-if (!empty($idsCarrinho)) {
-
-  // Cria os pontos de interrogação necessários para a consulta SQL
-  // Por exemplo, se houver 3 jogos, fica: ?,?,?
-  $placeholders = implode(',', array_fill(0, count($idsCarrinho), '?'));
-
-  // Cria a ligação com a base de dados
+/* se tiver jogos no carrinho, procura na base de dados */
+if (!empty($ids)) {
   $pdo = db();
 
-  // Prepara a consulta para buscar os jogos do carrinho que estejam ativos
-  $st = $pdo->prepare("SELECT id, title, genre, price, image FROM jogos WHERE id IN ($placeholders) AND is_active = 1");
+  $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-  // Executa a consulta usando os IDs dos jogos que estão no carrinho
-  $st->execute($idsCarrinho);
-
-  // Guarda todos os jogos encontrados num array
+  $st = $pdo->prepare("
+    SELECT id, title, genre, description, price, image
+    FROM jogos
+    WHERE id IN ($placeholders) AND is_active = 1
+  ");
+  $st->execute($ids);
   $jogos = $st->fetchAll();
 
-  // Percorre os jogos encontrados para calcular o total do carrinho
   foreach ($jogos as $jogo) {
     $total += (float)$jogo['price'];
   }
 }
+
+require_once __DIR__ . '/header.php';
 ?>
 
-<!-- Área do título da página do carrinho -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <!-- Título principal -->
-    <h2 class="fw-bold mb-1">carrinho</h2>
+<style>
+  .cart-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 50px 20px;
+  }
 
-    <!-- Pequena descrição da página -->
-    <p class="text-light-emphasis mb-0">os teus jogos adicionados</p>
+  .cart-header {
+    text-align: center;
+    margin-bottom: 35px;
+  }
+
+  .cart-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 44px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .cart-subtitle {
+    font-size: 20px;
+    color: rgba(255,255,255,0.65);
+  }
+
+  .empty-cart-box {
+    max-width: 620px;
+    margin: 0 auto;
+    background: rgba(20,20,28,0.94);
+    border: 1px solid rgba(37,196,90,0.45);
+    border-radius: 18px;
+    padding: 45px 30px;
+    text-align: center;
+    box-shadow: 0 0 28px rgba(37,196,90,0.18);
+  }
+
+  .empty-cart-icon {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: rgba(37,196,90,0.12);
+    border: 1px solid rgba(37,196,90,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #25c45a;
+    font-size: 42px;
+  }
+
+  .empty-cart-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+
+  .empty-cart-text {
+    font-size: 19px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 28px;
+  }
+
+  .cart-item {
+    background: rgba(20,20,28,0.94);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .cart-item-img {
+    width: 130px;
+    height: 95px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #000;
+  }
+
+  .cart-item-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+
+  .cart-item-genre {
+    color: #25c45a;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cart-item-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: #25c45a;
+    white-space: nowrap;
+  }
+
+  .cart-summary {
+    background: rgba(20,20,28,0.96);
+    border: 1px solid rgba(37,196,90,0.45);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 0 22px rgba(37,196,90,0.16);
+  }
+
+  .cart-total {
+    font-size: 28px;
+    font-weight: 700;
+    color: #25c45a;
+  }
+
+  .btn-cart-main {
+    background: linear-gradient(90deg, #2ed46b, #15984a);
+    border: none;
+    color: #06140b;
+    font-weight: 700;
+    font-size: 19px;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-transform: uppercase;
+  }
+
+  .btn-cart-main:hover {
+    background: linear-gradient(90deg, #40ec7d, #19aa53);
+    color: #000;
+  }
+
+  @media (max-width: 768px) {
+    .cart-item {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .cart-item-img {
+      width: 100%;
+      height: 180px;
+    }
+
+    .cart-title {
+      font-size: 34px;
+    }
+  }
+</style>
+
+<div class="cart-page">
+
+  <div class="cart-header">
+    <h1 class="cart-title">carrinho</h1>
   </div>
-</div>
 
-<?php if (empty($jogos)): ?>
-  <!-- Se não houver jogos no carrinho, mostra esta mensagem -->
-  <div class="alert alert-warning">
-    o teu carrinho está vazio.
-  </div>
+  <?php if (empty($jogos)): ?>
 
-  <!-- Botão para voltar para a loja -->
-  <a href="loja.php" class="btn btn-outline-light">ir para a loja</a>
+    <!-- Carrinho vazio -->
+    <div class="empty-cart-box">
 
-<?php else: ?>
-  <!-- Se existirem jogos no carrinho, mostra a lista dos jogos e o resumo da compra -->
-  <div class="row g-4">
+      <div class="empty-cart-icon">
+        <i class="bi bi-cart-x"></i>
+      </div>
 
-    <!-- Coluna principal onde aparecem os jogos do carrinho -->
-    <div class="col-lg-8">
+      <h2 class="empty-cart-title">o carrinho está vazio</h2>
 
-      <!-- Percorre todos os jogos que estão no carrinho -->
-      <?php foreach ($jogos as $jogo): ?>
+      <p class="empty-cart-text">
+        ainda não adicionaste nenhum jogo ao carrinho.
+        visita a loja e escolhe os teus jogos favoritos.
+      </p>
 
-        <!-- Cartão individual de cada jogo -->
-        <div class="card mb-3 border-0 shadow text-light" style="background: rgba(20,20,28,0.92);">
-          <div class="row g-0 align-items-center">
-            
-            <!-- Área da imagem do jogo -->
-            <div class="col-md-3">
+      <a href="<?= BASE_URL ?>/loja.php" class="btn btn-cart-main">
+        <i class="bi bi-controller me-2"></i>
+        ir para a loja
+      </a>
 
-              <?php if (!empty($jogo['image'])): ?>
-                <!-- Se o jogo tiver imagem, mostra a imagem -->
-                <img 
-                  src="<?= e($jogo['image']) ?>" 
-                  alt="<?= e($jogo['title']) ?>"
-                  class="img-fluid rounded-start"
-                  style="height: 160px; width: 100%; object-fit: cover;"
-                >
-              <?php else: ?>
-                <!-- Se o jogo não tiver imagem, mostra uma caixa com o texto 'sem imagem' -->
-                <div class="d-flex align-items-center justify-content-center h-100" style="min-height: 160px; background: #1a1a22;">
-                  <span class="text-secondary">sem imagem</span>
-                </div>
-              <?php endif; ?>
-
-            </div>
-
-            <!-- Área com as informações do jogo -->
-            <div class="col-md-9">
-              <div class="card-body">
-
-                <!-- Mostra o género/categoria do jogo -->
-                <span class="badge bg-secondary mb-2"><?= e($jogo['genre']) ?></span>
-
-                <!-- Mostra o título do jogo -->
-                <h5 class="card-title fw-bold"><?= e($jogo['title']) ?></h5>
-
-                <!-- Área com o preço e o botão de remover -->
-                <div class="d-flex justify-content-between align-items-center mt-3">
-
-                  <!-- Mostra o preço do jogo formatado em euros -->
-                  <span class="fs-5 fw-bold text-success">
-                    €<?= number_format((float)$jogo['price'], 2, ',', '.') ?>
-                  </span>
-
-                  <!-- Formulário para remover o jogo do carrinho -->
-                  <form method="post" action="remover_carrinho.php" class="m-0">
-
-                    <!-- Envia o ID do jogo que deve ser removido -->
-                    <input type="hidden" name="jogo_id" value="<?= (int)$jogo['id'] ?>">
-
-                    <!-- Botão para remover o jogo -->
-                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                      remover
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      <?php endforeach; ?>
     </div>
 
-    <!-- Coluna lateral com o resumo da compra -->
-    <div class="col-lg-4">
-      <div class="card border-0 shadow text-light" style="background: rgba(20,20,28,0.92);">
-        <div class="card-body">
+  <?php else: ?>
 
-          <!-- Título do resumo -->
-          <h5 class="fw-bold mb-3">resumo</h5>
+    <div class="row g-4">
 
-          <!-- Mostra a quantidade de jogos no carrinho -->
+      <div class="col-lg-8">
+
+        <?php foreach ($jogos as $jogo): ?>
+          <div class="cart-item">
+
+            <?php if (!empty($jogo['image'])): ?>
+              <img 
+                src="<?= BASE_URL ?>/<?= e($jogo['image']) ?>" 
+                class="cart-item-img" 
+                alt="<?= e($jogo['title']) ?>"
+              >
+            <?php else: ?>
+              <div class="cart-item-img d-flex align-items-center justify-content-center">
+                <i class="bi bi-controller fs-1 text-success"></i>
+              </div>
+            <?php endif; ?>
+
+            <div class="flex-grow-1">
+              <div class="cart-item-title"><?= e($jogo['title']) ?></div>
+              <div class="cart-item-genre"><?= e($jogo['genre']) ?></div>
+              <p class="text-light-emphasis mb-0 mt-2">
+                <?= e(substr($jogo['description'], 0, 90)) ?>...
+              </p>
+            </div>
+
+            <div class="text-center">
+              <div class="cart-item-price mb-3">
+                <?= number_format((float)$jogo['price'], 2, ',', '.') ?> €
+              </div>
+
+              <a 
+                href="<?= BASE_URL ?>/remover_carrinho.php?id=<?= (int)$jogo['id'] ?>" 
+                class="btn btn-outline-danger btn-sm"
+              >
+                <i class="bi bi-trash me-1"></i>
+                remover
+              </a>
+            </div>
+
+          </div>
+        <?php endforeach; ?>
+
+      </div>
+
+      <div class="col-lg-4">
+
+        <div class="cart-summary">
+
+          <h4 class="fw-bold mb-3">
+            <i class="bi bi-receipt me-2 text-success"></i>
+            resumo
+          </h4>
+
           <div class="d-flex justify-content-between mb-2">
-            <span>jogos</span>
-            <span><?= count($jogos) ?></span>
+            <span>Jogos:</span>
+            <strong><?= count($jogos) ?></strong>
           </div>
 
-          <!-- Mostra o valor total do carrinho -->
-          <div class="d-flex justify-content-between mb-3">
-            <span>total</span>
-            <span class="fw-bold text-success">
-              €<?= number_format($total, 2, ',', '.') ?>
+          <hr class="border-secondary">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <span class="fs-5">Total:</span>
+            <span class="cart-total">
+              <?= number_format($total, 2, ',', '.') ?> €
             </span>
           </div>
 
-          <!-- Botões de ação do carrinho -->
-          <div class="d-grid gap-2">
+          <a href="<?= BASE_URL ?>/pagamento.php" class="btn btn-cart-main w-100 mb-3">
+            <i class="bi bi-credit-card me-2"></i>
+            finalizar compra
+          </a>
 
-            <!-- Leva o utilizador para finalizar a compra -->
-           <a href="pagamento.php" class="btn btn-success">
-  avançar para pagamento
-</a>
+          <a href="<?= BASE_URL ?>/loja.php" class="btn btn-outline-light w-100">
+            continuar a comprar
+          </a>
 
-            <!-- Leva o utilizador de volta para a loja -->
-            <a href="loja.php" class="btn btn-outline-light">
-              continuar a comprar
-            </a>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
-<?php endif; ?>
 
-<?php
-// Importa o rodapé da página
-// Normalmente contém o fim do HTML e scripts finais
-require_once __DIR__ . '/footer.php';
-?>
+      </div>
+
+    </div>
+
+  <?php endif; ?>
+
+</div>
+
+<?php require_once __DIR__ . '/footer.php'; ?>

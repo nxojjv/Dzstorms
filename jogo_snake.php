@@ -1,454 +1,714 @@
-<?php
-/* carrega o cabeçalho do site */
-require_once __DIR__ . '/header.php';
-?>
+<?php require_once __DIR__ . '/header.php'; ?>
 
-<div class="container py-5">
-  <div class="card card-dark shadow mx-auto text-center" style="max-width: 760px;">
-    <div class="card-body p-5">
+<style>
+  .snake-page {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 45px 15px;
+  }
 
-      <!-- título do jogo -->
-      <h1 class="fw-bold mb-2">SNAKE</h1>
+  .snake-card {
+    width: 100%;
+    max-width: 760px;
+    background: rgba(10, 12, 18, 0.94);
+    border: 1px solid rgba(37,196,90,0.45);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 0 30px rgba(37,196,90,0.18);
+    text-align: center;
+  }
 
-      <!-- pequena descrição do jogo -->
-      <p class="text-light-emphasis mb-3">
-        controla a cobra, come as maçãs e tenta bater o teu recorde.
-      </p>
+  .snake-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
 
-      <!-- painel com informações do jogo -->
-      <div class="d-flex justify-content-center gap-4 mb-3 flex-wrap">
-        <div>pontos: <strong id="score" class="text-success">0</strong></div>
-        <div>recorde: <strong id="recorde" class="text-warning">0</strong></div>
-        <div>nível: <strong id="nivel" class="text-info">1</strong></div>
-        <div>desafio: <strong id="desafio" class="text-light">0/20</strong></div>
+  .snake-title span {
+    color: #25c45a;
+  }
+
+  .snake-subtitle {
+    color: rgba(255,255,255,0.65);
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .snake-info {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .snake-badge {
+    background: rgba(37,196,90,0.12);
+    border: 1px solid rgba(37,196,90,0.45);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .snake-badge span {
+    color: #25c45a;
+    font-weight: 700;
+  }
+
+  .canvas-wrap {
+    display: inline-block;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.7);
+  }
+
+  canvas {
+    display: block;
+    border-radius: 12px;
+    background: #071108;
+    border: 3px solid #25c45a;
+    box-shadow: 0 0 20px rgba(37,196,90,0.25);
+  }
+
+  .snake-controls {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-snake {
+    background: linear-gradient(90deg, #2ed46b, #15984a);
+    border: none;
+    color: #06140b;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 10px 24px;
+    border-radius: 10px;
+    text-transform: uppercase;
+  }
+
+  .btn-snake:hover {
+    background: linear-gradient(90deg, #40ec7d, #19aa53);
+    color: #000;
+  }
+
+  .snake-help {
+    margin-top: 16px;
+    color: rgba(255,255,255,0.55);
+    font-size: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .snake-title {
+      font-size: 32px;
+    }
+
+    canvas {
+      width: 320px;
+      height: 320px;
+    }
+  }
+</style>
+
+<div class="snake-page">
+  <div class="snake-card">
+
+    <h1 class="snake-title">Sna<span>ke</span></h1>
+
+    <p class="snake-subtitle">
+      apanha as maçãs, aumenta a pontuação e tenta bater o teu recorde
+    </p>
+
+    <div class="snake-info">
+      <div class="snake-badge">
+        Pontos: <span id="score">0</span>
       </div>
 
-      <!-- área onde o jogo é desenhado -->
-      <canvas 
-        id="game" 
-        width="420" 
-        height="420"
-        style="
-          background:#0b1f0b; 
-          border:3px solid #25c45a; 
-          border-radius:18px; 
-          box-shadow:0 0 25px rgba(37,196,90,0.35);
-          display:block;
-          margin:0 auto;
-        ">
-      </canvas>
-
-      <!-- mensagem mostrada quando o jogador chega aos 20 pontos -->
-      <div id="mensagem" class="alert alert-success mt-4 d-none">
-        desafio concluído! chegaste aos 20 pontos.
+      <div class="snake-badge">
+        Recorde: <span id="best">0</span>
       </div>
 
-      <!-- botões do jogo -->
-      <div class="mt-4">
-
-        <!-- type="button" evita comportamento estranho de formulário -->
-        <button type="button" class="btn btn-success" onclick="reiniciarJogo()">
-          reiniciar
-        </button>
-
-        <a href="biblioteca.php" class="btn btn-outline-light ms-2">
-          voltar
-        </a>
+      <div class="snake-badge">
+        Estado: <span id="status">jogando</span>
       </div>
-
-      <!-- instrução para o utilizador -->
-      <p class="text-light-emphasis small mt-3 mb-0">
-        usa as setas do teclado para jogar.
-      </p>
     </div>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="440" height="440"></canvas>
+    </div>
+
+    <div class="snake-controls">
+      <button class="btn btn-snake" onclick="restartGame()">
+        <i class="bi bi-arrow-clockwise me-2"></i>
+        reiniciar
+      </button>
+
+      <button class="btn btn-outline-light" onclick="togglePause()">
+        <i class="bi bi-pause-circle me-2"></i>
+        pausar
+      </button>
+
+      <a href="<?= BASE_URL ?>/biblioteca.php" class="btn btn-outline-success">
+        voltar à biblioteca
+      </a>
+    </div>
+
+    <div class="snake-help">
+      Usa as setas do teclado para jogar. Pressiona espaço para pausar.
+    </div>
+
   </div>
 </div>
 
 <script>
-/* pega o canvas e prepara o contexto 2D para desenhar */
+/* pega o canvas do jogo */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* pega os elementos do HTML onde aparecem as informações */
+/* tamanho de cada posição no tabuleiro */
+const box = 22;
+
+/* quantidade de casas no tabuleiro */
+const cols = canvas.width / box;
+const rows = canvas.height / box;
+
+/* elementos da interface */
 const scoreEl = document.getElementById("score");
-const recordeEl = document.getElementById("recorde");
-const nivelEl = document.getElementById("nivel");
-const desafioEl = document.getElementById("desafio");
-const mensagemEl = document.getElementById("mensagem");
+const bestEl = document.getElementById("best");
+const statusEl = document.getElementById("status");
 
-/* tamanho de cada quadrado do jogo */
-const tamanho = 21;
-
-/* quantidade total de quadrados no tabuleiro */
-const total = canvas.width / tamanho;
+/* guarda o recorde no navegador */
+let bestScore = Number(localStorage.getItem("dzstorms_snake_best") || 0);
+bestEl.textContent = bestScore;
 
 /* variáveis principais do jogo */
-let cobra;
-let comida;
-let direcao;
-let proximaDirecao;
-let pontos;
-let nivel;
-let velocidade;
-let acabou;
-let intervalo;
+let snake;
+let food;
+let direction;
+let nextDirection;
+let score;
+let gameOver;
+let paused;
+let speed;
+let gameLoop;
 
-/* pega o recorde guardado no navegador */
-let recorde = localStorage.getItem("reflexStormRecorde") || 0;
-recordeEl.textContent = recorde;
-
-/* função que inicia os valores do jogo */
-function iniciarValores() {
-
-  /* posição inicial da cobra */
-  cobra = [
-    { x: 10, y: 10 },
+/* inicia o jogo */
+function startGame() {
+  snake = [
     { x: 9, y: 10 },
-    { x: 8, y: 10 }
+    { x: 8, y: 10 },
+    { x: 7, y: 10 },
+    { x: 6, y: 10 }
   ];
 
-  /* posição inicial da comida */
-  comida = { x: 5, y: 5 };
+  direction = "RIGHT";
+  nextDirection = "RIGHT";
+  score = 0;
+  gameOver = false;
+  paused = false;
+  speed = 120;
 
-  /* direção inicial da cobra: para a direita */
-  direcao = { x: 1, y: 0 };
-  proximaDirecao = { x: 1, y: 0 };
+  scoreEl.textContent = score;
+  statusEl.textContent = "jogando";
 
-  /* valores iniciais */
-  pontos = 0;
-  nivel = 1;
-  velocidade = 150;
-  acabou = false;
+  createFood();
 
-  /* atualiza as informações na tela */
-  scoreEl.textContent = pontos;
-  nivelEl.textContent = nivel;
-  desafioEl.textContent = "0/20";
-
-  /* esconde a mensagem de desafio concluído */
-  mensagemEl.classList.add("d-none");
-
-  /* cria uma comida em posição aleatória */
-  criarComida();
-}
-
-/* função que inicia o loop do jogo */
-function iniciarLoop() {
-
-  /* evita criar vários intervalos ao mesmo tempo */
-  clearInterval(intervalo);
-
-  /* chama a função desenhar conforme a velocidade atual */
-  intervalo = setInterval(desenhar, velocidade);
-}
-
-/* função principal do jogo */
-function desenhar() {
-
-  /* se o jogo acabou, não faz mais nada */
-  if (acabou) return;
-
-  /* aplica a próxima direção escolhida pelo jogador */
-  direcao = proximaDirecao;
-
-  /* calcula a nova posição da cabeça */
-  const cabeca = {
-    x: cobra[0].x + direcao.x,
-    y: cobra[0].y + direcao.y
-  };
-
-  /* verifica se bateu na parede ou nela própria */
-  if (
-    cabeca.x < 0 || cabeca.x >= total ||
-    cabeca.y < 0 || cabeca.y >= total ||
-    bateuNaCobra(cabeca)
-  ) {
-    fimDeJogo();
-    return;
-  }
-
-  /* adiciona a nova cabeça no início da cobra */
-  cobra.unshift(cabeca);
-
-  /* verifica se a cobra comeu a comida */
-  if (cabeca.x === comida.x && cabeca.y === comida.y) {
-
-    /* aumenta a pontuação */
-    pontos++;
-
-    /* atualiza a pontuação na tela */
-    scoreEl.textContent = pontos;
-    desafioEl.textContent = pontos + "/20";
-
-    /* atualiza recorde e nível */
-    atualizarRecorde();
-    atualizarNivel();
-
-    /* cria nova comida */
-    criarComida();
-
-    /* se chegar aos 20 pontos, mostra mensagem */
-    if (pontos >= 20) {
-      mensagemEl.classList.remove("d-none");
-    }
-
-  } else {
-
-    /* se não comeu, remove o último pedaço para a cobra andar */
-    cobra.pop();
-  }
-
-  /* redesenha o jogo */
-  limparTela();
-  desenharGrade();
-  desenharComida();
-  desenharCobra();
-}
-
-/* limpa o canvas */
-function limparTela() {
-  ctx.fillStyle = "#0b1f0b";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-/* desenha o fundo quadriculado */
-function desenharGrade() {
-  for (let y = 0; y < total; y++) {
-    for (let x = 0; x < total; x++) {
-
-      /* alterna as cores dos quadrados */
-      ctx.fillStyle = (x + y) % 2 === 0 ? "#163d16" : "#123312";
-
-      /* desenha cada quadrado */
-      ctx.fillRect(x * tamanho, y * tamanho, tamanho, tamanho);
-    }
-  }
-}
-
-/* desenha a cobra inteira */
-function desenharCobra() {
-  cobra.forEach((parte, index) => {
-
-    /* converte posição da grade para pixels */
-    const px = parte.x * tamanho;
-    const py = parte.y * tamanho;
-
-    /* a primeira parte é a cabeça */
-    if (index === 0) {
-      desenharCabeca(px, py);
-    } else {
-      desenharCorpo(px, py);
-    }
-  });
-}
-
-/* desenha a cabeça da cobra */
-function desenharCabeca(px, py) {
-
-  /* cabeça azul */
-  ctx.fillStyle = "#61d4ff";
-  ctx.beginPath();
-  ctx.roundRect(px + 1, py + 1, tamanho - 2, tamanho - 2, 10);
-  ctx.fill();
-
-  /* olhos */
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(px + 7, py + 7, 4, 0, Math.PI * 2);
-  ctx.arc(px + 15, py + 7, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  /* pupilas */
-  ctx.fillStyle = "#000000";
-  ctx.beginPath();
-  ctx.arc(px + 8, py + 7, 2, 0, Math.PI * 2);
-  ctx.arc(px + 16, py + 7, 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  /* língua */
-  ctx.strokeStyle = "#ff3b3b";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(px + 11, py + 16);
-  ctx.lineTo(px + 11, py + 22);
-  ctx.stroke();
-}
-
-/* desenha o corpo da cobra */
-function desenharCorpo(px, py) {
-
-  /* corpo azul */
-  ctx.fillStyle = "#438cff";
-  ctx.beginPath();
-  ctx.roundRect(px + 1, py + 1, tamanho - 2, tamanho - 2, 9);
-  ctx.fill();
-
-  /* brilho no corpo */
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  ctx.beginPath();
-  ctx.arc(px + 7, py + 7, 3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-/* desenha a maçã */
-function desenharComida() {
-
-  /* centro da comida */
-  const cx = comida.x * tamanho + tamanho / 2;
-  const cy = comida.y * tamanho + tamanho / 2;
-
-  /* maçã vermelha */
-  ctx.fillStyle = "#ff3b3b";
-  ctx.beginPath();
-  ctx.arc(cx, cy, tamanho / 2 - 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  /* brilho da maçã */
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(cx - 3, cy - 3, 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  /* cabo da maçã */
-  ctx.fillStyle = "#25c45a";
-  ctx.fillRect(cx - 1, cy - 12, 4, 7);
-}
-
-/* verifica se a cabeça bateu no corpo da cobra */
-function bateuNaCobra(cabeca) {
-  return cobra.some(parte => parte.x === cabeca.x && parte.y === cabeca.y);
-}
-
-/* cria comida numa posição aleatória */
-function criarComida() {
-  comida = {
-    x: Math.floor(Math.random() * total),
-    y: Math.floor(Math.random() * total)
-  };
-
-  /* se a comida nascer em cima da cobra, cria outra */
-  if (cobra.some(parte => parte.x === comida.x && parte.y === comida.y)) {
-    criarComida();
-  }
-}
-
-/* atualiza o recorde guardado no navegador */
-function atualizarRecorde() {
-  if (pontos > recorde) {
-    recorde = pontos;
-    localStorage.setItem("reflexStormRecorde", recorde);
-    recordeEl.textContent = recorde;
-  }
-}
-
-/* aumenta a dificuldade conforme os pontos */
-function atualizarNivel() {
-
-  let novoNivel = 1;
-  let novaVelocidade = 150;
-
-  if (pontos >= 5) {
-    novoNivel = 2;
-    novaVelocidade = 125;
-  }
-
-  if (pontos >= 10) {
-    novoNivel = 3;
-    novaVelocidade = 100;
-  }
-
-  if (pontos >= 15) {
-    novoNivel = 4;
-    novaVelocidade = 80;
-  }
-
-  /* se mudou de nível, atualiza a velocidade do jogo */
-  if (novoNivel !== nivel) {
-    nivel = novoNivel;
-    velocidade = novaVelocidade;
-    nivelEl.textContent = nivel;
-    iniciarLoop();
-  }
-}
-
-/* termina o jogo */
-function fimDeJogo() {
-
-  /* marca o jogo como terminado */
-  acabou = true;
-
-  /* para o loop */
-  clearInterval(intervalo);
-
-  /* escurece o canvas */
-  ctx.fillStyle = "rgba(0,0,0,0.75)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  /* texto de fim de jogo */
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "34px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("fim do jogo", canvas.width / 2, canvas.height / 2 - 20);
-
-  /* mostra pontos e recorde */
-  ctx.font = "20px Arial";
-  ctx.fillText("pontos: " + pontos, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.fillText("recorde: " + recorde, canvas.width / 2, canvas.height / 2 + 50);
+  clearInterval(gameLoop);
+  gameLoop = setInterval(updateGame, speed);
 }
 
 /* reinicia o jogo */
-function reiniciarJogo() {
-  iniciarValores();
-  limparTela();
-  desenharGrade();
-  desenharComida();
-  desenharCobra();
-  iniciarLoop();
+function restartGame() {
+  startGame();
 }
 
-/* controla a cobra pelas setas do teclado */
-document.addEventListener("keydown", function(e) {
+/* pausa ou continua o jogo */
+function togglePause() {
+  if (gameOver) return;
 
-  /* lista das teclas usadas no jogo */
-  const teclasDoJogo = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+  paused = !paused;
+  statusEl.textContent = paused ? "pausado" : "jogando";
+}
 
-  /* impede que as setas façam a página subir/descer */
-  if (teclasDoJogo.includes(e.key)) {
-    e.preventDefault();
+/* cria a comida em posição aleatória */
+function createFood() {
+  food = {
+    x: Math.floor(Math.random() * cols),
+    y: Math.floor(Math.random() * rows)
+  };
+
+  /* impede a comida de aparecer dentro da cobra */
+  for (let part of snake) {
+    if (part.x === food.x && part.y === food.y) {
+      createFood();
+      return;
+    }
+  }
+}
+
+/* desenha o fundo do tabuleiro */
+function drawBackground() {
+  ctx.fillStyle = "#071108";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  /* grelha do fundo */
+  ctx.strokeStyle = "rgba(255,255,255,0.035)";
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x <= canvas.width; x += box) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
   }
 
-  /* seta para cima */
-  if (e.key === "ArrowUp" && direcao.y !== 1) {
-    proximaDirecao = { x: 0, y: -1 };
+  for (let y = 0; y <= canvas.height; y += box) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
   }
 
-  /* seta para baixo */
-  if (e.key === "ArrowDown" && direcao.y !== -1) {
-    proximaDirecao = { x: 0, y: 1 };
+  /* brilho verde suave no fundo */
+  const glow = ctx.createRadialGradient(
+    canvas.width / 2,
+    canvas.height / 2,
+    40,
+    canvas.width / 2,
+    canvas.height / 2,
+    280
+  );
+
+  glow.addColorStop(0, "rgba(37,196,90,0.08)");
+  glow.addColorStop(1, "rgba(37,196,90,0)");
+
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+/* desenha a maçã */
+function drawFood() {
+  const centerX = food.x * box + box / 2;
+  const centerY = food.y * box + box / 2;
+
+  /* corpo da maçã */
+  const gradient = ctx.createRadialGradient(
+    centerX - 4,
+    centerY - 5,
+    2,
+    centerX,
+    centerY,
+    13
+  );
+
+  gradient.addColorStop(0, "#ff9b9b");
+  gradient.addColorStop(1, "#d90429");
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY + 1, box * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* brilho da maçã */
+  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.beginPath();
+  ctx.arc(centerX - 4, centerY - 4, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* folha */
+  ctx.fillStyle = "#25c45a";
+  ctx.beginPath();
+  ctx.ellipse(centerX + 4, centerY - 10, 5, 3, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* cabo */
+  ctx.strokeStyle = "#5c3a16";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - 9);
+  ctx.lineTo(centerX + 2, centerY - 14);
+  ctx.stroke();
+}
+
+/* pega o centro de uma parte da cobra */
+function getCenter(part) {
+  return {
+    x: part.x * box + box / 2,
+    y: part.y * box + box / 2
+  };
+}
+
+/* define a rotação da cabeça */
+function getHeadAngle() {
+  if (direction === "RIGHT") return 0;
+  if (direction === "LEFT") return Math.PI;
+  if (direction === "UP") return -Math.PI / 2;
+  if (direction === "DOWN") return Math.PI / 2;
+
+  return 0;
+}
+
+/* desenha a cobra como uma cobra real, com corpo ligado */
+function drawSnake() {
+  if (snake.length === 0) return;
+
+  ctx.save();
+
+  /*
+    Primeiro desenha a sombra do corpo.
+    Isso dá profundidade e deixa a cobra menos plana.
+  */
+  ctx.beginPath();
+
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const p = getCenter(snake[i]);
+
+    if (i === snake.length - 1) {
+      ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
   }
 
-  /* seta para esquerda */
-  if (e.key === "ArrowLeft" && direcao.x !== 1) {
-    proximaDirecao = { x: -1, y: 0 };
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.lineWidth = 26;
+  ctx.stroke();
+
+  /*
+    Corpo principal da cobra.
+    Ele é uma linha grossa com pontas arredondadas.
+  */
+  ctx.beginPath();
+
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const p = getCenter(snake[i]);
+
+    if (i === snake.length - 1) {
+      ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
   }
 
-  /* seta para direita */
-  if (e.key === "ArrowRight" && direcao.x !== -1) {
-    proximaDirecao = { x: 1, y: 0 };
+  const bodyGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  bodyGradient.addColorStop(0, "#8cff8c");
+  bodyGradient.addColorStop(0.45, "#25c45a");
+  bodyGradient.addColorStop(1, "#0b7a35");
+
+  ctx.strokeStyle = bodyGradient;
+  ctx.lineWidth = 20;
+  ctx.stroke();
+
+  /*
+    Linha de brilho no corpo.
+    Faz a cobra parecer mais viva.
+  */
+  ctx.beginPath();
+
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const p = getCenter(snake[i]);
+
+    if (i === snake.length - 1) {
+      ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
   }
 
-}, { passive: false });
+  ctx.strokeStyle = "rgba(255,255,255,0.20)";
+  ctx.lineWidth = 6;
+  ctx.stroke();
 
-/* inicia o jogo assim que a página carrega */
-iniciarValores();
-limparTela();
-desenharGrade();
-desenharComida();
-desenharCobra();
-iniciarLoop();
+  /*
+    Manchas pequenas no corpo.
+    Dá mais aparência de pele de cobra.
+  */
+  for (let i = 2; i < snake.length; i += 2) {
+    const p = getCenter(snake[i]);
+
+    ctx.fillStyle = "rgba(0, 70, 30, 0.42)";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /*
+    Desenha a cauda mais fina.
+  */
+  drawSnakeTail();
+
+  /*
+    Desenha a cabeça por cima do corpo.
+  */
+  drawSnakeHead();
+
+  ctx.restore();
+}
+
+/* desenha a cauda da cobra */
+function drawSnakeTail() {
+  const tail = getCenter(snake[snake.length - 1]);
+
+  ctx.fillStyle = "#0b7a35";
+  ctx.beginPath();
+  ctx.arc(tail.x, tail.y, 7, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/* desenha a cabeça com olhos e língua */
+function drawSnakeHead() {
+  const head = getCenter(snake[0]);
+  const angle = getHeadAngle();
+
+  ctx.save();
+
+  ctx.translate(head.x, head.y);
+  ctx.rotate(angle);
+
+  /*
+    Língua bifurcada.
+    Ela é desenhada antes da cabeça para parecer que sai da boca.
+  */
+  ctx.strokeStyle = "#ff2f5f";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(12, 0);
+  ctx.lineTo(23, 0);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(23, 0);
+  ctx.lineTo(29, -4);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(23, 0);
+  ctx.lineTo(29, 4);
+  ctx.stroke();
+
+  /*
+    Cabeça oval.
+  */
+  const headGradient = ctx.createRadialGradient(-4, -4, 2, 0, 0, 18);
+  headGradient.addColorStop(0, "#a6ffa6");
+  headGradient.addColorStop(0.5, "#35d66b");
+  headGradient.addColorStop(1, "#11843d");
+
+  ctx.fillStyle = headGradient;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 15.5, 12.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  /*
+    Olhos.
+  */
+  ctx.fillStyle = "#ffffff";
+
+  ctx.beginPath();
+  ctx.arc(5, -6, 3.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(5, 6, 3.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  /*
+    Pupilas.
+  */
+  ctx.fillStyle = "#000000";
+
+  ctx.beginPath();
+  ctx.arc(6.2, -6, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(6.2, 6, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  /*
+    Pequena boca.
+  */
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(10, -2);
+  ctx.quadraticCurveTo(13, 0, 10, 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* mostra a tela de game over */
+function drawGameOver() {
+  ctx.fillStyle = "rgba(0,0,0,0.72)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#25c45a";
+  ctx.font = "700 34px Orbitron";
+  ctx.textAlign = "center";
+  ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 25);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "500 20px Rajdhani";
+  ctx.fillText("clica em reiniciar para jogar novamente", canvas.width / 2, canvas.height / 2 + 18);
+}
+
+/* atualiza o jogo a cada movimento */
+function updateGame() {
+  if (paused || gameOver) return;
+
+  direction = nextDirection;
+
+  let head = { ...snake[0] };
+
+  if (direction === "LEFT") head.x--;
+  if (direction === "RIGHT") head.x++;
+  if (direction === "UP") head.y--;
+  if (direction === "DOWN") head.y++;
+
+  /* verifica colisão com parede */
+  if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
+    endGame();
+    return;
+  }
+
+  const willEat = head.x === food.x && head.y === food.y;
+
+  /*
+    Para verificar colisão com o corpo,
+    se a cobra não vai comer, ignoramos a cauda,
+    porque ela vai sair do lugar no mesmo movimento.
+  */
+  const bodyToCheck = willEat ? snake : snake.slice(0, snake.length - 1);
+
+  for (let part of bodyToCheck) {
+    if (head.x === part.x && head.y === part.y) {
+      endGame();
+      return;
+    }
+  }
+
+  /* adiciona a nova cabeça */
+  snake.unshift(head);
+
+  /* se comer a maçã */
+  if (willEat) {
+    score += 10;
+    scoreEl.textContent = score;
+
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem("dzstorms_snake_best", bestScore);
+      bestEl.textContent = bestScore;
+    }
+
+    createFood();
+
+    /*
+      Aumenta a velocidade aos poucos.
+    */
+    if (score % 50 === 0 && speed > 65) {
+      speed -= 8;
+      clearInterval(gameLoop);
+      gameLoop = setInterval(updateGame, speed);
+    }
+
+  } else {
+    /* remove a cauda se não comeu */
+    snake.pop();
+  }
+
+  drawBackground();
+  drawFood();
+  drawSnake();
+}
+
+/* termina o jogo */
+function endGame() {
+  gameOver = true;
+  statusEl.textContent = "perdeu";
+
+  clearInterval(gameLoop);
+
+  drawBackground();
+  drawFood();
+  drawSnake();
+  drawGameOver();
+}
+
+/* controla as setas do teclado */
+document.addEventListener("keydown", function(event) {
+  const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
+
+  /*
+    Impede a página de mexer quando usa as setas.
+  */
+  if (keys.includes(event.key)) {
+    event.preventDefault();
+  }
+
+  if (event.key === "ArrowLeft" && direction !== "RIGHT") {
+    nextDirection = "LEFT";
+  }
+
+  if (event.key === "ArrowRight" && direction !== "LEFT") {
+    nextDirection = "RIGHT";
+  }
+
+  if (event.key === "ArrowUp" && direction !== "DOWN") {
+    nextDirection = "UP";
+  }
+
+  if (event.key === "ArrowDown" && direction !== "UP") {
+    nextDirection = "DOWN";
+  }
+
+  if (event.key === " ") {
+    togglePause();
+  }
+});
+
+/* desenha a primeira tela */
+startGame();
+drawBackground();
+drawFood();
+drawSnake();
 </script>
 
-<?php 
-/* carrega o rodapé do site */
-require_once __DIR__ . '/footer.php'; 
+<?php
+/*
+  Fecha a div aberta no header.php.
+  Como é uma página de jogo, usamos scripts.php para não mostrar o rodapé.
+*/
+echo '</div>';
+
+if (file_exists(__DIR__ . '/scripts.php')) {
+  require_once __DIR__ . '/scripts.php';
+} else {
+  echo '
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+  </html>
+  ';
+}
 ?>

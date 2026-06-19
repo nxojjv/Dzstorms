@@ -41,6 +41,37 @@ if ($pesquisa !== '') {
 $jogos = $st->fetchAll();
 ?>
 
+<style>
+  /* card geral do jogo */
+  .game-card {
+    background: rgba(20,20,28,0.92);
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  /* caixa onde fica a imagem do jogo */
+  .game-cover-box {
+    height: 310px;
+    background: #05080c;
+    overflow: hidden;
+  }
+
+  /* imagem do jogo */
+  .game-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  /* caso algum jogo não tenha imagem */
+  .game-cover-empty {
+    height: 310px;
+    background: #1a1a22;
+  }
+</style>
+
 <!-- título da página -->
 <div class="text-center mb-4">
   <h2 class="page-title mb-1">
@@ -92,25 +123,26 @@ $jogos = $st->fetchAll();
       <div class="col-md-6 col-lg-4">
 
         <!-- card do jogo -->
-        <div class="card h-100 shadow border-0 text-light" style="background: rgba(20,20,28,0.92); overflow:hidden;">
+        <div class="card h-100 shadow border-0 text-light game-card">
 
           <?php if (!empty($jogo['image'])): ?>
+
             <!-- imagem do jogo -->
-            <div style="height: 270px; overflow: hidden; background:#111;">
+            <div class="game-cover-box">
               <img 
                 src="<?= e($jogo['image']) ?>" 
                 alt="<?= e($jogo['title']) ?>"
-                style="width: 100%; height: 100%; object-fit: cover; object-position: center top;"
+                class="game-cover-img"
               >
             </div>
+
           <?php else: ?>
+
             <!-- caso o jogo não tenha imagem -->
-            <div 
-              class="d-flex align-items-center justify-content-center"
-              style="height: 270px; background: #1a1a22;"
-            >
+            <div class="d-flex align-items-center justify-content-center game-cover-empty">
               <span class="text-secondary">sem imagem</span>
             </div>
+
           <?php endif; ?>
 
           <div class="card-body d-flex flex-column">

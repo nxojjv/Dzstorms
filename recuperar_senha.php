@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $st->execute([$token, $user['id']]);
 
   /* cria o link real de recuperação */
-  $link = BASE_URL . "/redefinir_senha.php?token=" . urlencode($token);
+  $link = "http://localhost/dzstorms/redefinir_senha.php?token=" . urlencode($token);
 
   /* assunto do email */
   $assunto = "Recuperação de senha - DZStorms";
@@ -85,8 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p>Se o botão não funcionar, copia e cola este link no navegador:</p>
 
     <p>" . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . "</p>
-
-    <p>Se não foste tu que pediste isto, podes ignorar este email.</p>
   ";
 
   /* envia o email real */

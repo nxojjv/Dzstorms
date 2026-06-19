@@ -1,22 +1,15 @@
 <?php
-/*
-  Este ficheiro faz o logout do utilizador.
+require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/functions.php';
 
-  Ele limpa os dados da sessão, termina a sessão atual
-  e envia o utilizador de volta para a página inicial.
-*/
+/* apaga os dados do utilizador logado */
+unset($_SESSION['user']);
 
-/* carrega as configurações principais do projeto e inicia a sessão */
-require_once __DIR__ . '/config.php';
+/* limpa também o carrinho */
+cart_clear();
 
-/* limpa todas as variáveis guardadas na sessão */
-$_SESSION = [];
+/* mensagem de sucesso */
+flash_set('success', 'sessão terminada com sucesso.');
 
-/* destrói a sessão atual */
-session_destroy();
-
-/* redireciona o utilizador para a página inicial */
-header('Location: index.php');
-
-/* termina a execução do ficheiro */
-exit;
+/* volta para o login */
+redirect('entrar.php');

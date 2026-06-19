@@ -11,19 +11,20 @@ $flash = flash_get();
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>dzstorms</title>
 
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Ícones do Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <!-- Fontes -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Fontes do Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     body {
       background: url('<?= BASE_URL ?>/img/bg.png') no-repeat center top fixed;
       background-size: cover;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
     }
 
     body::before {
@@ -46,8 +47,9 @@ $flash = flash_get();
     }
 
     .navbar .btn {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
       font-size: 22px;
+      font-weight: 600;
       padding: 10px 24px;
       border-radius: 8px;
       text-transform: lowercase;
@@ -57,6 +59,44 @@ $flash = flash_get();
       font-size: 26px !important;
       padding: 9px 18px !important;
       line-height: 1;
+    }
+
+    .login-btn {
+      font-weight: 700;
+    }
+
+    .account-menu {
+      background: rgba(20,20,28,0.98);
+      border: 1px solid rgba(37,196,90,0.45);
+      border-radius: 10px;
+      padding: 8px;
+      min-width: 220px;
+      box-shadow: 0 0 18px rgba(37,196,90,0.25);
+    }
+
+    .account-menu .dropdown-item {
+      color: #fff;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-transform: lowercase;
+    }
+
+    .account-menu .dropdown-item:hover {
+      background: rgba(37,196,90,0.18);
+      color: #25c45a;
+    }
+
+    .account-menu .logout-item {
+      color: #ff4b5c !important;
+      font-weight: 700;
+    }
+
+    .account-menu .logout-item:hover {
+      background: rgba(220,53,69,0.18);
+      color: #ff6b79 !important;
     }
 
     .hero-section {
@@ -83,8 +123,9 @@ $flash = flash_get();
     }
 
     .hero-subtitle {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
       font-size: 28px;
+      font-weight: 500;
       letter-spacing: 5px;
       text-transform: uppercase;
       color: rgba(255,255,255,0.75);
@@ -94,6 +135,7 @@ $flash = flash_get();
       background: linear-gradient(90deg, #2ed46b, #15984a);
       border: none;
       color: #06140b;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
       font-weight: 700;
       font-size: 22px;
       padding: 14px 42px;
@@ -111,34 +153,51 @@ $flash = flash_get();
       background: rgba(20,20,28,0.92);
       border: 1px solid rgba(255,255,255,0.08);
       color: white;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
     }
 
     .footer-text {
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 16px;
-      letter-spacing: 0;
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
       color: rgba(255,255,255,0.75);
     }
-   .page-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 42px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: #ffffff;
-}
 
-.green-letter {
-  color: #25c45a;
-}
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #ffffff;
+    }
 
-.page-subtitle {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 15px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: rgba(255,255,255,0.65);
-}
+    .green-letter {
+      color: #25c45a;
+    }
+
+    .page-subtitle {
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
+    }
+
+    .alert {
+      font-family: 'Rajdhani', Arial, Helvetica, sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+    }
   </style>
 </head>
 
@@ -146,6 +205,8 @@ $flash = flash_get();
 
 <nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container-fluid px-5">
+
+    <!-- Logo -->
     <a class="navbar-brand d-flex align-items-center" href="<?= BASE_URL ?>/index.php">
       <img src="<?= BASE_URL ?>/img/logo.png" class="brand-logo" alt="logo dzstorms">
     </a>
@@ -166,15 +227,57 @@ $flash = flash_get();
       </a>
 
       <?php if (is_logged_in()): ?>
-        <a class="btn btn-success" href="<?= BASE_URL ?>/biblioteca.php">biblioteca</a>
 
-        <?php if (is_admin()): ?>
-          <a class="btn btn-warning" href="<?= BASE_URL ?>/dashboard.php">admin</a>
-        <?php endif; ?>
+        <!-- Menu da conta -->
+        <div class="dropdown">
+          <button 
+            class="btn btn-success dropdown-toggle login-btn" 
+            type="button" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false"
+          >
+            <i class="bi bi-person-circle me-2"></i>
+            conta
+          </button>
 
-        <a class="btn btn-outline-danger" href="<?= BASE_URL ?>/sair.php">sair</a>
+          <ul class="dropdown-menu dropdown-menu-end account-menu">
+
+            <li>
+              <a class="dropdown-item" href="<?= BASE_URL ?>/biblioteca.php">
+                <i class="bi bi-collection-play me-2"></i>
+                biblioteca
+              </a>
+            </li>
+
+            <?php if (is_admin()): ?>
+              <li>
+                <a class="dropdown-item" href="<?= BASE_URL ?>/dashboard.php">
+                  <i class="bi bi-shield-lock-fill me-2"></i>
+                  admin
+                </a>
+              </li>
+            <?php endif; ?>
+
+            <li><hr class="dropdown-divider border-secondary"></li>
+
+            <li>
+              <a class="dropdown-item logout-item" href="<?= BASE_URL ?>/sair.php">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                sair
+              </a>
+            </li>
+
+          </ul>
+        </div>
+
       <?php else: ?>
-        <a class="btn btn-success" href="<?= BASE_URL ?>/entrar.php">login</a>
+
+        <!-- Botão de login -->
+        <a class="btn btn-success login-btn" href="<?= BASE_URL ?>/entrar.php">
+          <i class="bi bi-person-circle me-2"></i>
+          login
+        </a>
+
       <?php endif; ?>
 
     </div>

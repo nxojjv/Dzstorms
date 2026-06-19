@@ -16,13 +16,16 @@ if (!in_array($metodoPagamento, ['cartao_demo', 'mbway_demo'])) {
   redirect('pagamento.php');
 }
 
+/* pega os ids dos jogos que estão no carrinho */
 $idsCarrinho = array_keys(cart_items());
 
+/* se o carrinho estiver vazio, volta para o carrinho */
 if (empty($idsCarrinho)) {
   flash_set('danger', 'o carrinho está vazio.');
   redirect('carrinho.php');
 }
 
+/* cria a ligação com a base de dados */
 $pdo = db();
 
 /* verifica se o email do utilizador está confirmado */
@@ -35,8 +38,10 @@ if (!$user || (int)$user['email_verified'] !== 1) {
   redirect('carrinho.php');
 }
 
+/* cria os placeholders para procurar os jogos do carrinho */
 $placeholders = implode(',', array_fill(0, count($idsCarrinho), '?'));
 
+/* procura os jogos ativos que estão no carrinho */
 $st = $pdo->prepare("
   SELECT id, title, price 
   FROM jogos 
@@ -45,6 +50,7 @@ $st = $pdo->prepare("
 $st->execute($idsCarrinho);
 $jogos = $st->fetchAll();
 
+/* se não encontrar jogos válidos, cancela a compra */
 if (empty($jogos)) {
   flash_set('danger', 'não foi possível finalizar a compra.');
   redirect('carrinho.php');
@@ -56,7 +62,9 @@ foreach ($jogos as $jogo) {
     SELECT ip.id
     FROM pedidos p
     INNER JOIN itens_pedido ip ON ip.pedido_id = p.id
-    WHERE p.user_id = ? AND ip.jogo_id = ?
+    WHERE p.user_id = ? 
+    AND ip.jogo_id = ?
+    AND p.status = 'pago'
     LIMIT 1
   ");
   $stCheck->execute([current_user_id(), $jogo['id']]);
@@ -67,6 +75,7 @@ foreach ($jogos as $jogo) {
   }
 }
 
+/* calcula o total da compra */
 $total = 0;
 
 foreach ($jogos as $jogo) {
@@ -74,21 +83,23 @@ foreach ($jogos as $jogo) {
 }
 
 try {
+  /* inicia a transação */
   $pdo->beginTransaction();
 
-  /* cria o pedido */
+  /* cria o pedido com status pago */
   $st = $pdo->prepare("
     INSERT INTO pedidos (user_id, total, status)
-    VALUES (?, ?, 'concluido')
+    VALUES (?, ?, 'pago')
   ");
   $st->execute([current_user_id(), $total]);
 
+  /* pega o id do pedido criado */
   $pedidoId = $pdo->lastInsertId();
 
-  /* cria os itens do pedido */
+  /* cria os itens do pedido com quantidade 1 */
   $stItem = $pdo->prepare("
-    INSERT INTO itens_pedido (pedido_id, jogo_id, price)
-    VALUES (?, ?, ?)
+    INSERT INTO itens_pedido (pedido_id, jogo_id, quantidade, price)
+    VALUES (?, ?, 1, ?)
   ");
 
   foreach ($jogos as $jogo) {
@@ -99,19 +110,24 @@ try {
     ]);
   }
 
+  /* confirma a compra */
   $pdo->commit();
 
+  /* limpa o carrinho */
   cart_clear();
 
+  /* mensagem conforme o método de pagamento demo */
   if ($metodoPagamento === 'cartao_demo') {
     flash_set('success', 'pagamento demo por cartão aprovado. compra realizada com sucesso!');
   } else {
     flash_set('success', 'pagamento demo por MB WAY aprovado. compra realizada com sucesso!');
   }
 
+  /* vai para a biblioteca */
   redirect('biblioteca.php');
 
 } catch (Exception $e) {
+  /* desfaz a compra se der erro */
   $pdo->rollBack();
 
   flash_set('danger', 'erro ao finalizar a compra.');

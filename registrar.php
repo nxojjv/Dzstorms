@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $st->execute([$email]);
 
   if ($st->fetch()) {
-    flash_set('danger', 'este email já está registado.');
+    flash_set('danger', 'este email já está registrado.');
     redirect('registrar.php');
   }
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <p>A tua conta foi criada com sucesso.</p>
 
-    <p>Para ativares a conta, clica no botão abaixo:</p>
+    <p>Para ativar a conta, clica no botão abaixo:</p>
 
     <p>
       <a 
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     flash_set('warning', 'conta criada, mas houve erro ao enviar o email de verificação.');
   }
 
-  /* depois do registo, manda para o login */
+  /* depois do registro, manda para o login */
   redirect('entrar.php');
 }
 
@@ -117,14 +117,14 @@ require_once __DIR__ . '/header.php';
     <div class="card-body p-4">
 
       <!-- título da página -->
-      <h3 class="fw-bold mb-3 text-center">registar</h3>
+      <h3 class="fw-bold mb-3 text-center">registrar</h3>
 
       <!-- formulário de registo -->
       <form method="post">
 
         <!-- campo do nome -->
         <div class="mb-3">
-          <label class="form-label">nome</label>
+          <label class="form-label">user</label>
           <input class="form-control" name="name" required>
         </div>
 
@@ -182,16 +182,16 @@ require_once __DIR__ . '/header.php';
           </div>
         </div>
 
-        <!-- botão para registar -->
+        <!-- botão para registrar -->
         <button class="btn btn-success w-100">
-          registar
+          registrar
         </button>
       </form>
 
       <!-- link para login caso já tenha conta -->
       <div class="text-center mt-3">
         <small>
-          já tens conta?
+          já tem conta?
           <a href="entrar.php" class="text-success">login</a>
         </small>
       </div>

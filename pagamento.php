@@ -48,7 +48,8 @@ require_once __DIR__ . '/header.php';
       </p>
 
       <!-- formulário que envia os dados para finalizar_compra.php -->
-      <form method="post" action="finalizar_compra.php">
+      <!-- onsubmit chama a função validarPagamento antes de enviar -->
+      <form method="post" action="finalizar_compra.php" onsubmit="return validarPagamento()">
 
         <!-- escolha do método de pagamento -->
         <div class="mb-3">
@@ -69,34 +70,47 @@ require_once __DIR__ . '/header.php';
 
         <!-- campos do cartão demo -->
         <div id="cartaoBox" class="d-none">
+
+          <!-- número do cartão demo -->
           <div class="mb-3">
             <label class="form-label">número do cartão</label>
             <input 
               type="text" 
               name="numero_cartao"
+              id="numero_cartao"
               class="form-control" 
               placeholder="4242 4242 4242 4242"
+              minlength="13"
+              maxlength="19"
             >
           </div>
 
           <div class="row">
+
+            <!-- validade do cartão demo -->
             <div class="col-md-6 mb-3">
               <label class="form-label">validade</label>
               <input 
                 type="text" 
                 name="validade_cartao"
+                id="validade_cartao"
                 class="form-control" 
                 placeholder="12/28"
+                maxlength="5"
               >
             </div>
 
+            <!-- CVV do cartão demo -->
             <div class="col-md-6 mb-3">
               <label class="form-label">cvv</label>
               <input 
                 type="text" 
                 name="cvv_cartao"
+                id="cvv_cartao"
                 class="form-control" 
                 placeholder="123"
+                minlength="3"
+                maxlength="4"
               >
             </div>
           </div>
@@ -104,13 +118,18 @@ require_once __DIR__ . '/header.php';
 
         <!-- campo do MB WAY demo -->
         <div id="mbwayBox" class="d-none">
+
+          <!-- número de telemóvel -->
           <div class="mb-3">
             <label class="form-label">número de telemóvel</label>
             <input 
               type="text" 
               name="telefone_mbway"
+              id="telefone_mbway"
               class="form-control" 
               placeholder="912 345 678"
+              minlength="9"
+              maxlength="11"
             >
           </div>
         </div>
@@ -141,23 +160,79 @@ require_once __DIR__ . '/header.php';
 /* mostra os campos corretos conforme o método escolhido */
 function mostrarCampos() {
   const metodo = document.getElementById('metodo_pagamento').value;
+
   const cartaoBox = document.getElementById('cartaoBox');
   const mbwayBox = document.getElementById('mbwayBox');
+
+  const numeroCartao = document.getElementById('numero_cartao');
+  const validadeCartao = document.getElementById('validade_cartao');
+  const cvvCartao = document.getElementById('cvv_cartao');
+  const telefoneMbway = document.getElementById('telefone_mbway');
 
   /* primeiro esconde tudo */
   cartaoBox.classList.add('d-none');
   mbwayBox.classList.add('d-none');
 
-  /* se escolher cartão, mostra os campos do cartão */
+  /* remove obrigatoriedade de todos os campos */
+  numeroCartao.required = false;
+  validadeCartao.required = false;
+  cvvCartao.required = false;
+  telefoneMbway.required = false;
+
+  /* se escolher cartão, mostra e obriga os campos do cartão */
   if (metodo === 'cartao_demo') {
     cartaoBox.classList.remove('d-none');
+
+    numeroCartao.required = true;
+    validadeCartao.required = true;
+    cvvCartao.required = true;
   }
 
-  /* se escolher MB WAY, mostra o campo do telemóvel */
+  /* se escolher MB WAY, mostra e obriga o telemóvel */
   if (metodo === 'mbway_demo') {
     mbwayBox.classList.remove('d-none');
+
+    telefoneMbway.required = true;
   }
 }
+
+/* valida o formulário antes de enviar para finalizar_compra.php */
+function validarPagamento() {
+  const metodo = document.getElementById('metodo_pagamento').value;
+
+  const numeroCartao = document.getElementById('numero_cartao').value.trim();
+  const validadeCartao = document.getElementById('validade_cartao').value.trim();
+  const cvvCartao = document.getElementById('cvv_cartao').value.trim();
+  const telefoneMbway = document.getElementById('telefone_mbway').value.trim();
+
+  /* se não escolher método, não deixa avançar */
+  if (metodo === '') {
+    alert('Escolhe um método de pagamento.');
+    return false;
+  }
+
+  /* valida cartão demo */
+  if (metodo === 'cartao_demo') {
+    if (numeroCartao === '' || validadeCartao === '' || cvvCartao === '') {
+      alert('Preenche os dados do cartão demo.');
+      return false;
+    }
+  }
+
+  /* valida MB WAY demo */
+  if (metodo === 'mbway_demo') {
+    if (telefoneMbway === '') {
+      alert('Preenche o número de telemóvel do MB WAY demo.');
+      return false;
+    }
+  }
+
+  /* se estiver tudo preenchido, deixa finalizar */
+  return true;
+}
+
+/* chama a função ao carregar a página para garantir o estado correto */
+mostrarCampos();
 </script>
 
 <?php

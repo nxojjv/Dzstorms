@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <p>Recebemos um pedido para redefinir a senha da tua conta no DZStorms.</p>
 
-    <p>Para criares uma nova senha, clica no botão abaixo:</p>
+    <p>Para criar uma nova senha, clica no botão abaixo:</p>
 
     <p>
       <a 

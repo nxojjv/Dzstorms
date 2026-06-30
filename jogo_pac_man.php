@@ -4,7 +4,7 @@ require_once __DIR__ . '/header.php';
 ?>
 
 <style>
-  /* área geral da página do jogo */
+  /* página do jogo */
   .pacman-page {
     min-height: calc(100vh - 160px);
     display: flex;
@@ -13,10 +13,10 @@ require_once __DIR__ . '/header.php';
     padding: 45px 15px;
   }
 
-  /* caixa onde fica o jogo */
+  /* caixa principal do jogo */
   .pacman-card {
     width: 100%;
-    max-width: 900px;
+    max-width: 800px;
     background: rgba(10, 12, 18, 0.94);
     border: 1px solid rgba(37,196,90,0.45);
     border-radius: 18px;
@@ -25,10 +25,10 @@ require_once __DIR__ . '/header.php';
     text-align: center;
   }
 
-  /* título PAC-MAN */
+  /* título */
   .pacman-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 42px;
+    font-size: 40px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -45,11 +45,11 @@ require_once __DIR__ . '/header.php';
     margin-bottom: 20px;
   }
 
-  /* informações: pontos, vidas, recorde e estado */
+  /* informações do jogo */
   .pacman-info {
     display: flex;
     justify-content: center;
-    gap: 18px;
+    gap: 14px;
     flex-wrap: wrap;
     margin-bottom: 18px;
   }
@@ -59,8 +59,8 @@ require_once __DIR__ . '/header.php';
     border: 1px solid rgba(37,196,90,0.45);
     color: #fff;
     border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 18px;
+    padding: 9px 15px;
+    font-size: 17px;
     font-weight: 600;
   }
 
@@ -79,7 +79,7 @@ require_once __DIR__ . '/header.php';
     box-shadow: inset 0 0 18px rgba(0,0,0,0.7);
   }
 
-  /* área onde o jogo é desenhado */
+  /* área do jogo */
   canvas {
     display: block;
     max-width: 100%;
@@ -150,12 +150,16 @@ require_once __DIR__ . '/header.php';
       </div>
     </div>
 
-    <!-- canvas menor: 42 colunas x 18 px = 756 / 31 linhas x 18 px = 558 -->
+    <!-- 
+      canvas do jogo:
+      30 colunas x 22px = 660px
+      20 linhas x 22px = 440px
+    -->
     <div class="canvas-wrap">
-      <canvas id="game" width="756" height="558"></canvas>
+      <canvas id="game" width="660" height="440"></canvas>
     </div>
 
-    <!-- botões do jogo -->
+    <!-- botões -->
     <div class="pacman-controls">
       <button class="btn btn-pacman" onclick="reiniciarJogo()">
         <i class="bi bi-arrow-clockwise me-2"></i>
@@ -181,32 +185,31 @@ require_once __DIR__ . '/header.php';
 
 <script>
 /* ==================================================
-   CONFIGURAÇÃO BÁSICA DO JOGO
+   CONFIGURAÇÃO BÁSICA
 ================================================== */
 
-/* pega o canvas, que é onde o jogo vai ser desenhado */
+/* pega o canvas onde o jogo é desenhado */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* pega os textos da página para atualizar durante o jogo */
+/* textos que aparecem por cima do jogo */
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const bestEl = document.getElementById("best");
 const statusEl = document.getElementById("status");
 
 /*
-  tamanho de cada quadradinho do mapa.
-  se aumentar, o mapa fica maior.
-  se diminuir, o mapa fica menor.
+  tamanho de cada quadrado.
+  se mudares o tile, tens de mudar também o tamanho do canvas.
 */
-const tile = 18;
+const tile = 22;
 
-/* quantidade de colunas e linhas do mapa */
-const cols = 42;
-const rows = 31;
+/* mapa com 30 colunas e 20 linhas */
+const cols = 30;
+const rows = 20;
 
 /*
-  valores usados dentro do mapa:
+  valores usados no mapa:
 
   0 = espaço vazio
   1 = parede azul normal
@@ -228,17 +231,20 @@ let lives = 3;
 let best = Number(localStorage.getItem("dzstorms_pacman_best") || 0);
 bestEl.textContent = best;
 
-/* controlo geral do jogo */
+/* controla o estado do jogo */
 let paused = false;
 let gameOver = false;
-let animationId;
+let won = false;
 
-/* usado para controlar o tempo entre movimentos */
+/* controla a animação */
+let animationId;
 let lastTime = 0;
 let moveTimer = 0;
-let moveDelay = 135;
 
-/* usado para animar algumas partes */
+/* tempo entre movimentos */
+let moveDelay = 145;
+
+/* usado para animar algumas coisas */
 let tick = 0;
 
 /* tempo em que os fantasmas ficam vulneráveis */
@@ -246,10 +252,10 @@ let powerTimer = 0;
 
 /* dados do Pac-Man */
 const pacman = {
-  x: 21,
-  y: 25,
-  startX: 21,
-  startY: 25,
+  x: 15,
+  y: 17,
+  startX: 15,
+  startY: 17,
   dirX: 0,
   dirY: 0,
   nextDirX: 0,
@@ -270,15 +276,14 @@ function criarMapa() {
   map = [];
 
   /*
-    primeiro cria o mapa inteiro com pontos.
-    depois colocamos as paredes e as letras por cima.
+    primeiro cria tudo cheio de pontos.
+    depois colocamos as paredes e o PLAY por cima.
   */
   for (let y = 0; y < rows; y++) {
     let row = [];
 
     for (let x = 0; x < cols; x++) {
-
-      /* borda do mapa */
+      /* bordas do mapa */
       if (x === 0 || x === cols - 1 || y === 0 || y === rows - 1) {
         row.push(1);
       } else {
@@ -289,78 +294,58 @@ function criarMapa() {
     map.push(row);
   }
 
-  /* algumas paredes normais para formar o labirinto */
-  criarParedeH(3, 3, 7);
-  criarParedeH(13, 3, 7);
-  criarParedeH(23, 3, 7);
-  criarParedeH(33, 3, 6);
+  /* paredes de cima */
+  criarParedeH(3, 3, 5);
+  criarParedeH(10, 3, 5);
+  criarParedeH(18, 3, 5);
+  criarParedeH(25, 3, 3);
 
-  criarParedeV(4, 7, 6);
-  criarParedeV(12, 7, 6);
-  criarParedeV(20, 7, 5);
-  criarParedeV(30, 7, 6);
-  criarParedeV(38, 7, 6);
+  /* paredes laterais e internas */
+  criarParedeV(3, 6, 5);
+  criarParedeV(8, 6, 3);
+  criarParedeV(21, 6, 3);
+  criarParedeV(26, 6, 5);
 
-  criarParedeH(7, 10, 7);
-  criarParedeH(17, 10, 7);
-  criarParedeH(28, 10, 6);
+  criarParedeH(5, 11, 6);
+  criarParedeH(19, 11, 6);
 
-  criarParedeH(4, 19, 9);
-  criarParedeH(17, 19, 8);
-  criarParedeH(29, 19, 8);
+  criarParedeV(6, 12, 4);
+  criarParedeV(23, 12, 4);
 
-  criarParedeV(8, 16, 5);
-  criarParedeV(15, 16, 5);
-  criarParedeV(21, 16, 6);
-  criarParedeV(28, 16, 5);
-  criarParedeV(35, 16, 5);
-
-  criarParedeH(5, 27, 7);
-  criarParedeH(16, 27, 8);
-  criarParedeH(27, 27, 7);
-  criarParedeH(36, 27, 4);
-
-  criarParedeH(2, 23, 6);
-  criarParedeH(12, 23, 7);
-  criarParedeH(23, 23, 7);
-  criarParedeH(34, 23, 6);
+  criarParedeH(3, 16, 6);
+  criarParedeH(11, 16, 5);
+  criarParedeH(18, 16, 5);
+  criarParedeH(25, 16, 3);
 
   /*
-    limpa a parte central onde vai ficar a palavra PLAY.
-    assim a palavra aparece como parte do mapa e não fica misturada com pontos.
+    limpa a parte central onde o PLAY vai ficar.
+    assim o PLAY vira parte do mapa, não texto por cima.
   */
-  for (let y = 6; y <= 15; y++) {
-    for (let x = 8; x <= 33; x++) {
-      map[y][x] = 0;
-    }
-  }
+  limparArea(4, 4, 22, 7);
 
-  /* cria o PLAY usando blocos do próprio mapa */
+  /* cria o PLAY no meio com blocos coloridos */
   criarPlayNoMapa();
 
-  /* cria a casa onde os fantasmas começam */
+  /* cria a casa dos fantasmas */
   criarCasaDosFantasmas();
 
-  /* pontos grandes, estilo Pac-Man */
-  map[4][2] = 3;
-  map[4][39] = 3;
-  map[24][2] = 3;
-  map[24][39] = 3;
+  /* pontos grandes */
+  map[2][2] = 3;
+  map[2][27] = 3;
+  map[17][2] = 3;
+  map[17][27] = 3;
 
-  /* tira ponto da posição inicial do Pac-Man */
+  /* limpa posição inicial do Pac-Man */
   map[pacman.startY][pacman.startX] = 0;
 
-  /*
-    limpa a área perto da casa dos fantasmas,
-    para eles conseguirem sair e se mover.
-  */
-  limparArea(17, 16, 8, 4);
+  /* limpa uma área para os fantasmas conseguirem sair */
+  limparArea(12, 11, 6, 4);
 
-  /* recria a casa depois de limpar a área */
+  /* recria a casa depois da limpeza */
   criarCasaDosFantasmas();
 }
 
-/* cria parede horizontal normal */
+/* cria parede horizontal */
 function criarParedeH(x, y, tamanho) {
   for (let i = x; i < x + tamanho; i++) {
     if (i >= 0 && i < cols && y >= 0 && y < rows) {
@@ -369,7 +354,7 @@ function criarParedeH(x, y, tamanho) {
   }
 }
 
-/* cria parede vertical normal */
+/* cria parede vertical */
 function criarParedeV(x, y, tamanho) {
   for (let i = y; i < y + tamanho; i++) {
     if (x >= 0 && x < cols && i >= 0 && i < rows) {
@@ -378,7 +363,7 @@ function criarParedeV(x, y, tamanho) {
   }
 }
 
-/* limpa uma parte do mapa */
+/* limpa uma área do mapa */
 function limparArea(x, y, w, h) {
   for (let linha = y; linha < y + h; linha++) {
     for (let coluna = x; coluna < x + w; coluna++) {
@@ -389,21 +374,21 @@ function limparArea(x, y, w, h) {
   }
 }
 
-/* cria um bloco especial, usado nas letras PLAY */
+/* cria bloco especial usado nas letras PLAY */
 function criarBlocoEspecial(x, y, cor) {
   if (x >= 0 && x < cols && y >= 0 && y < rows) {
     map[y][x] = cor;
   }
 }
 
-/* cria uma linha horizontal com bloco especial */
+/* linha horizontal especial */
 function criarEspecialH(x, y, tamanho, cor) {
   for (let i = x; i < x + tamanho; i++) {
     criarBlocoEspecial(i, y, cor);
   }
 }
 
-/* cria uma linha vertical com bloco especial */
+/* linha vertical especial */
 function criarEspecialV(x, y, tamanho, cor) {
   for (let i = y; i < y + tamanho; i++) {
     criarBlocoEspecial(x, i, cor);
@@ -411,9 +396,9 @@ function criarEspecialV(x, y, tamanho, cor) {
 }
 
 /*
-  aqui é onde o PLAY é feito.
+  aqui o PLAY é feito com blocos.
   não é texto normal.
-  são blocos do mapa, igual parede.
+  cada letra é parede do próprio mapa.
 */
 function criarPlayNoMapa() {
   /*
@@ -423,48 +408,48 @@ function criarPlayNoMapa() {
     Y branco = 7
   */
 
-  /* letra P */
-  criarEspecialV(10, 7, 7, 4);
-  criarEspecialH(10, 7, 5, 4);
-  criarEspecialH(10, 10, 5, 4);
-  criarEspecialV(14, 7, 4, 4);
+  /* P */
+  criarEspecialV(5, 5, 5, 4);
+  criarEspecialH(5, 5, 4, 4);
+  criarEspecialH(5, 7, 4, 4);
+  criarEspecialV(8, 5, 3, 4);
 
-  /* letra L */
-  criarEspecialV(17, 7, 7, 5);
-  criarEspecialH(17, 13, 5, 5);
+  /* L */
+  criarEspecialV(11, 5, 5, 5);
+  criarEspecialH(11, 9, 4, 5);
 
-  /* letra A */
-  criarEspecialV(24, 8, 6, 6);
-  criarEspecialV(29, 8, 6, 6);
-  criarEspecialH(25, 7, 4, 6);
-  criarEspecialH(24, 10, 6, 6);
+  /* A */
+  criarEspecialV(17, 6, 4, 6);
+  criarEspecialV(21, 6, 4, 6);
+  criarEspecialH(18, 5, 3, 6);
+  criarEspecialH(17, 7, 5, 6);
 
-  /* letra Y */
-  criarEspecialV(33, 7, 3, 7);
-  criarEspecialV(38, 7, 3, 7);
-  criarEspecialH(34, 10, 4, 7);
-  criarEspecialV(36, 10, 4, 7);
+  /* Y */
+  criarEspecialV(24, 5, 2, 7);
+  criarEspecialV(28, 5, 2, 7);
+  criarEspecialH(25, 7, 3, 7);
+  criarEspecialV(26, 7, 3, 7);
 
-  /* uma pecinha avulsa decorativa */
-  criarEspecialH(31, 6, 2, 7);
+  /* pecinha avulsa decorativa */
+  criarBlocoEspecial(23, 4, 7);
 }
 
 /* casa dos fantasmas */
 function criarCasaDosFantasmas() {
   /*
-    esta casa fica abaixo do PLAY.
+    casa pequena no centro.
     os fantasmas começam aqui.
   */
-  limparArea(17, 16, 8, 4);
+  limparArea(12, 11, 6, 4);
 
-  criarParedeH(17, 16, 8);
-  criarParedeH(17, 20, 8);
-  criarParedeV(17, 16, 5);
-  criarParedeV(24, 16, 5);
+  criarParedeH(12, 11, 6);
+  criarParedeH(12, 15, 6);
+  criarParedeV(12, 11, 5);
+  criarParedeV(17, 11, 5);
 
   /* abertura da casa */
-  map[16][20] = 0;
-  map[16][21] = 0;
+  map[11][14] = 0;
+  map[11][15] = 0;
 }
 
 
@@ -475,37 +460,37 @@ function criarCasaDosFantasmas() {
 function criarFantasmas() {
   ghosts = [
     {
-      x: 20,
-      y: 18,
-      startX: 20,
-      startY: 18,
+      x: 14,
+      y: 13,
+      startX: 14,
+      startY: 13,
       color: "#ff2a2a",
       dirX: 1,
       dirY: 0
     },
     {
-      x: 21,
-      y: 18,
-      startX: 21,
-      startY: 18,
+      x: 15,
+      y: 13,
+      startX: 15,
+      startY: 13,
       color: "#30d5ff",
       dirX: -1,
       dirY: 0
     },
     {
-      x: 20,
-      y: 19,
-      startX: 20,
-      startY: 19,
+      x: 14,
+      y: 14,
+      startX: 14,
+      startY: 14,
       color: "#ff92d0",
       dirX: 0,
       dirY: -1
     },
     {
-      x: 21,
-      y: 19,
-      startX: 21,
-      startY: 19,
+      x: 15,
+      y: 14,
+      startX: 15,
+      startY: 14,
       color: "#ffd53a",
       dirX: 0,
       dirY: -1
@@ -534,9 +519,13 @@ function desenharTudo() {
   if (gameOver) {
     desenharGameOver();
   }
+
+  if (won) {
+    desenharVitoria();
+  }
 }
 
-/* fundo preto com um brilho leve */
+/* fundo preto com brilho leve */
 function desenharFundo() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -544,10 +533,10 @@ function desenharFundo() {
   const glow = ctx.createRadialGradient(
     canvas.width / 2,
     canvas.height / 2,
-    70,
+    60,
     canvas.width / 2,
     canvas.height / 2,
-    380
+    310
   );
 
   glow.addColorStop(0, "rgba(37,196,90,0.06)");
@@ -557,7 +546,7 @@ function desenharFundo() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-/* desenha mapa, paredes, PLAY e pontos */
+/* desenha mapa, paredes, pontos e PLAY */
 function desenharMapa() {
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -594,7 +583,7 @@ function desenharMapa() {
       if (val === 2) {
         ctx.fillStyle = "#ffd1b3";
         ctx.beginPath();
-        ctx.arc(px + tile / 2, py + tile / 2, 2.3, 0, Math.PI * 2);
+        ctx.arc(px + tile / 2, py + tile / 2, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -607,7 +596,7 @@ function desenharMapa() {
 
         ctx.fillStyle = "#ffd1b3";
         ctx.beginPath();
-        ctx.arc(px + tile / 2, py + tile / 2, 6.4, 0, Math.PI * 2);
+        ctx.arc(px + tile / 2, py + tile / 2, 7, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -616,12 +605,12 @@ function desenharMapa() {
   }
 }
 
-/* desenha cada bloco do mapa com brilho */
+/* desenha cada bloco com brilho */
 function desenharBlocoMapa(px, py, cor) {
   ctx.save();
 
   ctx.shadowColor = cor;
-  ctx.shadowBlur = 7;
+  ctx.shadowBlur = 8;
 
   ctx.strokeStyle = cor;
   ctx.lineWidth = 3;
@@ -636,9 +625,9 @@ function desenharBlocoMapa(px, py, cor) {
   ctx.restore();
 }
 
-/* mostra READY antes do Pac-Man começar a andar */
+/* mostra READY antes de começar */
 function desenharReady() {
-  if (pacman.dirX !== 0 || pacman.dirY !== 0 || paused || gameOver) {
+  if (pacman.dirX !== 0 || pacman.dirY !== 0 || paused || gameOver || won) {
     return;
   }
 
@@ -649,12 +638,12 @@ function desenharReady() {
   ctx.fillStyle = "#ffee32";
   ctx.shadowColor = "#ffee32";
   ctx.shadowBlur = 10;
-  ctx.fillText("READY!", canvas.width / 2, 410);
+  ctx.fillText("READY!", canvas.width / 2, 370);
 
   ctx.restore();
 }
 
-/* desenha o Pac-Man com boca animada */
+/* desenha o Pac-Man */
 function desenharPacman() {
   const px = pacman.x * tile + tile / 2;
   const py = pacman.y * tile + tile / 2;
@@ -667,7 +656,7 @@ function desenharPacman() {
   if (pacman.dirY === -1) angle = -Math.PI / 2;
   if (pacman.dirY === 1) angle = Math.PI / 2;
 
-  /* animação da boca abrindo e fechando */
+  /* animação da boca */
   pacman.mouth += 0.035 * pacman.mouthDirection;
 
   if (pacman.mouth > 0.45 || pacman.mouth < 0.08) {
@@ -707,7 +696,7 @@ function desenharFantasma(g) {
   const px = g.x * tile;
   const py = g.y * tile;
 
-  /* se o poder estiver ativo, o fantasma fica azul */
+  /* se o poder estiver ativo, fantasma fica azul */
   const color = powerTimer > 0 ? "#214cff" : g.color;
 
   ctx.save();
@@ -715,15 +704,15 @@ function desenharFantasma(g) {
   ctx.shadowColor = color;
   ctx.shadowBlur = 12;
 
-  /* corpo do fantasma */
+  /* corpo */
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(px + tile / 2, py + tile / 2 - 1, 8, Math.PI, 0);
-  ctx.lineTo(px + tile - 1, py + tile - 2);
-  ctx.lineTo(px + 14, py + 15);
-  ctx.lineTo(px + 9, py + tile - 2);
-  ctx.lineTo(px + 5, py + 15);
-  ctx.lineTo(px + 1, py + tile - 2);
+  ctx.arc(px + tile / 2, py + tile / 2 - 1, 9, Math.PI, 0);
+  ctx.lineTo(px + tile - 2, py + tile - 2);
+  ctx.lineTo(px + 16, py + 17);
+  ctx.lineTo(px + 11, py + tile - 2);
+  ctx.lineTo(px + 6, py + 17);
+  ctx.lineTo(px + 2, py + tile - 2);
   ctx.closePath();
   ctx.fill();
 
@@ -732,15 +721,15 @@ function desenharFantasma(g) {
   /* olhos */
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(px + 6, py + 7, 2.8, 0, Math.PI * 2);
-  ctx.arc(px + 12, py + 7, 2.8, 0, Math.PI * 2);
+  ctx.arc(px + 8, py + 8, 3, 0, Math.PI * 2);
+  ctx.arc(px + 14, py + 8, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  /* pupilas olhando para a direção em que o fantasma anda */
+  /* pupilas */
   ctx.fillStyle = "#214cff";
   ctx.beginPath();
-  ctx.arc(px + 6 + g.dirX, py + 7 + g.dirY, 1.2, 0, Math.PI * 2);
-  ctx.arc(px + 12 + g.dirX, py + 7 + g.dirY, 1.2, 0, Math.PI * 2);
+  ctx.arc(px + 8 + g.dirX, py + 8 + g.dirY, 1.3, 0, Math.PI * 2);
+  ctx.arc(px + 14 + g.dirX, py + 8 + g.dirY, 1.3, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -752,7 +741,7 @@ function desenharPausa() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "#25c45a";
-  ctx.font = "bold 38px Orbitron";
+  ctx.font = "bold 36px Orbitron";
   ctx.textAlign = "center";
   ctx.fillText("PAUSADO", canvas.width / 2, canvas.height / 2);
 }
@@ -763,7 +752,7 @@ function desenharGameOver() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "#ff4b5c";
-  ctx.font = "bold 38px Orbitron";
+  ctx.font = "bold 36px Orbitron";
   ctx.textAlign = "center";
   ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
 
@@ -778,7 +767,7 @@ function desenharVitoria() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "#ffee32";
-  ctx.font = "bold 38px Orbitron";
+  ctx.font = "bold 36px Orbitron";
   ctx.textAlign = "center";
   ctx.fillText("VENCERSTE!", canvas.width / 2, canvas.height / 2 - 20);
 
@@ -789,10 +778,10 @@ function desenharVitoria() {
 
 
 /* ==================================================
-   MOVIMENTO E REGRAS DO JOGO
+   MOVIMENTO E REGRAS
 ================================================== */
 
-/* diz quais valores são paredes */
+/* diz o que conta como parede */
 function valorParede(valor) {
   return valor === 1 || valor === 4 || valor === 5 || valor === 6 || valor === 7;
 }
@@ -809,7 +798,7 @@ function parede(x, y) {
 /* move o Pac-Man */
 function moverPacman() {
   /*
-    primeiro tenta mudar para a direção que o jogador pediu.
+    primeiro tenta mudar para a direção que o jogador quer.
     se não tiver parede, muda.
   */
   const testeX = pacman.x + pacman.nextDirX;
@@ -832,7 +821,7 @@ function moverPacman() {
   comerPonto();
 }
 
-/* come os pontos do mapa */
+/* Pac-Man come pontos */
 function comerPonto() {
   const valor = map[pacman.y][pacman.x];
 
@@ -847,19 +836,18 @@ function comerPonto() {
     map[pacman.y][pacman.x] = 0;
     score += 50;
 
-    /* ativa poder contra os fantasmas */
+    /* ativa o poder contra os fantasmas */
     powerTimer = 90;
     statusEl.textContent = "poder";
   }
 
   atualizarPontuacao();
 
-  /* verifica se acabou os pontos */
+  /* se não tiver mais pontos, venceu */
   if (verificarVitoria()) {
-    gameOver = true;
+    won = true;
     cancelAnimationFrame(animationId);
     desenharTudo();
-    desenharVitoria();
   }
 }
 
@@ -876,8 +864,8 @@ function moverFantasmas() {
     ];
 
     /*
-      vê para onde o fantasma pode andar.
-      ele não pode passar por paredes.
+      vê as direções possíveis.
+      fantasma não atravessa parede.
     */
     dirs.forEach(d => {
       const nx = g.x + d.x;
@@ -890,8 +878,8 @@ function moverFantasmas() {
 
     if (opcoes.length > 0) {
       /*
-        se o poder estiver ativo, o fantasma tenta fugir.
-        se não estiver, ele tenta chegar mais perto do Pac-Man.
+        sem poder: tenta chegar perto do Pac-Man.
+        com poder: tenta fugir do Pac-Man.
       */
       opcoes.sort((a, b) => {
         const distA = Math.abs((g.x + a.x) - pacman.x) + Math.abs((g.y + a.y) - pacman.y);
@@ -905,8 +893,8 @@ function moverFantasmas() {
       });
 
       /*
-        75% das vezes ele escolhe o melhor caminho.
-        o resto é aleatório, para não ficar robótico demais.
+        75% das vezes escolhe a melhor direção.
+        25% das vezes escolhe aleatório para não ficar travado.
       */
       const escolha = Math.random() < 0.75
         ? opcoes[0]
@@ -921,9 +909,9 @@ function moverFantasmas() {
   });
 }
 
-/* verifica colisão entre Pac-Man e fantasmas */
+/* verifica se Pac-Man encostou num fantasma */
 function verificarColisao() {
-  ghosts.forEach(g => {
+  for (let g of ghosts) {
     if (g.x === pacman.x && g.y === pacman.y) {
 
       /* com poder, Pac-Man come o fantasma */
@@ -936,11 +924,13 @@ function verificarColisao() {
       } else {
         perderVida();
       }
+
+      return;
     }
-  });
+  }
 }
 
-/* perde uma vida */
+/* perde vida */
 function perderVida() {
   lives--;
   livesEl.textContent = lives;
@@ -951,7 +941,7 @@ function perderVida() {
     return;
   }
 
-  /* volta Pac-Man para o começo */
+  /* volta Pac-Man para o início */
   pacman.x = pacman.startX;
   pacman.y = pacman.startY;
   pacman.dirX = 0;
@@ -959,7 +949,7 @@ function perderVida() {
   pacman.nextDirX = 0;
   pacman.nextDirY = 0;
 
-  /* tira poder se tiver */
+  /* tira o poder se estiver ativo */
   powerTimer = 0;
   statusEl.textContent = "jogando";
 
@@ -991,9 +981,9 @@ function verificarVitoria() {
   return true;
 }
 
-/* pausa e continua o jogo */
+/* pausa ou continua */
 function pausarJogo() {
-  if (gameOver) return;
+  if (gameOver || won) return;
 
   paused = !paused;
   statusEl.textContent = paused ? "pausado" : "jogando";
@@ -1009,6 +999,7 @@ function reiniciarJogo() {
   lives = 3;
   paused = false;
   gameOver = false;
+  won = false;
   powerTimer = 0;
 
   pacman.x = pacman.startX;
@@ -1037,7 +1028,7 @@ function reiniciarJogo() {
 ================================================== */
 
 function loop(timestamp = 0) {
-  if (gameOver) {
+  if (gameOver || won) {
     desenharTudo();
     return;
   }
@@ -1058,8 +1049,8 @@ function loop(timestamp = 0) {
     }
 
     /*
-      o jogo só move depois de um intervalo.
-      isso deixa o movimento em quadradinhos, estilo Pac-Man.
+      o jogo move por quadradinhos.
+      por isso tem um intervalo entre movimentos.
     */
     if (moveTimer >= moveDelay) {
       moverPacman();
@@ -1077,15 +1068,15 @@ function loop(timestamp = 0) {
 
 
 /* ==================================================
-   CONTROLOS DO TECLADO
+   TECLADO
 ================================================== */
 
 document.addEventListener("keydown", function(e) {
   const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
 
   /*
-    impede a página de subir/descer quando usa as setas.
-    isso era importante porque as setas são usadas no jogo.
+    impede a página de mexer quando usa as setas.
+    isto é importante porque as setas são do jogo.
   */
   if (keys.includes(e.key)) {
     e.preventDefault();
@@ -1129,7 +1120,7 @@ loop();
 
 <?php
 /*
-  Fecha a div que foi aberta no header.php.
+  Fecha a div aberta no header.php.
   Como é página de jogo, usamos scripts.php para não mostrar o rodapé.
 */
 echo '</div>';
